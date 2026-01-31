@@ -462,25 +462,43 @@ def create_classification_form():
     st.subheader("6️⃣ General Purpose AI (GPAI) / Allzweck-KI")
     st.markdown("""
     <div class="info-box">
-    Ist Ihr KI-System ein Allzweck-KI-Modell (GPAI), das für eine Vielzahl von Aufgaben verwendet werden kann?
-    Beispiele: GPT-4, Claude, Gemini, Llama, Mistral
+    <strong>Entwickeln Sie selbst ein KI-Basismodell?</strong><br>
+    Die meisten Unternehmen <em>nutzen</em> bestehende Modelle (z.B. GPT, Claude) -
+    dann gelten die GPAI-Pflichten für den Modellanbieter, nicht für Sie.
     </div>
     """, unsafe_allow_html=True)
 
-    col1, col2 = st.columns(2)
+    gpai_options = [
+        "Nein, ich nutze bestehende Modelle (z.B. GPT, Claude, Gemini API)",
+        "Ich finetune/passe ein bestehendes Modell an",
+        "Ja, ich entwickle selbst ein Allzweck-KI-Modell",
+        "Ja, ich entwickle ein großes, weit verbreitetes Allzweck-KI-Modell"
+    ]
 
-    with col1:
-        is_gpai = st.checkbox(
-            "System ist ein GPAI-Modell",
-            help="Das System ist ein Allzweck-KI-Modell, das für viele verschiedene Aufgaben genutzt werden kann"
-        )
+    selected_gpai = st.radio(
+        "Ihre Rolle:",
+        gpai_options,
+        help="Wählen Sie die Option, die auf Ihr Unternehmen zutrifft"
+    )
 
-    with col2:
-        gpai_systemic = st.checkbox(
-            "GPAI mit systemischem Risiko",
-            help="Das Modell hat hohe Auswirkungskapazitäten oder ist weit verbreitet (z.B. > 10^25 FLOPs für Training)",
-            disabled=not is_gpai
-        )
+    # Logik für GPAI-Flags
+    is_gpai = selected_gpai in [gpai_options[2], gpai_options[3]]
+    gpai_systemic = selected_gpai == gpai_options[3]
+    is_finetuning = selected_gpai == gpai_options[1]
+
+    # Erklärung je nach Auswahl
+    if selected_gpai == gpai_options[0]:
+        st.info("**Keine GPAI-Anbieter-Pflichten für Sie.** Ihre Pflichten ergeben sich aus den Fragen oben (Anwendungsbereich, Transparenz, etc.).")
+    elif selected_gpai == gpai_options[1]:
+        st.warning("""**Finetuning - Prüfung erforderlich:**
+- **Leichtes Finetuning** (LoRA, Prompt-Tuning, Adapter): Sie bleiben Deployer, keine GPAI-Pflichten.
+- **Umfangreiches Finetuning** (neue Fähigkeiten, wesentliche Änderungen): Sie könnten zum GPAI-Anbieter werden.
+
+*Im Zweifel rechtliche Beratung einholen.*""")
+    elif selected_gpai == gpai_options[2]:
+        st.warning("**GPAI-Pflichten gelten:** Technische Dokumentation, Urheberrechts-Compliance, Information an nachgelagerte Anbieter.")
+    else:
+        st.error("**GPAI + Systemisches Risiko:** Zusätzliche Pflichten wie Modell-Evaluierungen, Vorfallmeldung, Cybersicherheit.")
 
     st.divider()
 
