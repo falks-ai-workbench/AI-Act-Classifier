@@ -4,7 +4,7 @@ Streamlit-basierte Webanwendung zur automatischen Einstufung von KI-Systemen
 """
 
 import streamlit as st
-from datetime import datetime
+from datetime import datetime, date
 
 from classifier_logic import (
     classify_ai_system,
@@ -12,6 +12,9 @@ from classifier_logic import (
     HIGH_RISK_DOMAINS,
     PROHIBITED_PRACTICES,
     ANNEX_I_PRODUCTS,
+    REALTIME_BIOMETRIC_EXCEPTIONS,
+    CODE_OF_PRACTICE_MARKING,
+    AI_ACT_DEADLINES,
     get_risk_color
 )
 from export_utils import (
@@ -69,6 +72,34 @@ st.markdown("""
     .info-box {
         background-color: #e7f3fe;
         border-left: 5px solid #2196F3;
+        padding: 15px;
+        margin: 10px 0;
+        border-radius: 5px;
+    }
+    .warning-box {
+        background-color: #fff3cd;
+        border-left: 5px solid #ffc107;
+        padding: 15px;
+        margin: 10px 0;
+        border-radius: 5px;
+    }
+    .gpai-box {
+        background-color: #e8daef;
+        border-left: 5px solid #8e44ad;
+        padding: 15px;
+        margin: 10px 0;
+        border-radius: 5px;
+    }
+    .universal-box {
+        background-color: #d5f4e6;
+        border-left: 5px solid #27ae60;
+        padding: 15px;
+        margin: 10px 0;
+        border-radius: 5px;
+    }
+    .deadline-box {
+        background-color: #fdebd0;
+        border-left: 5px solid #e67e22;
         padding: 15px;
         margin: 10px 0;
         border-radius: 5px;
@@ -217,6 +248,12 @@ def create_classification_form():
             help="Vorhersage von Straftaten ausschließlich basierend auf Profiling ohne objektive Fakten"
         )
 
+        # NEU: Predictive Policing mit objektiven Fakten
+        predictive_policing_facts = st.checkbox(
+            "Predictive Policing (mit objektiven Fakten)",
+            help="Vorhersage von Straftaten unter Berücksichtigung objektiver, nachprüfbarer Fakten (HIGH RISK, nicht verboten)"
+        )
+
     with col2:
         facial_scraping = st.checkbox(
             "Gesichtserkennung-Scraping",
@@ -237,6 +274,25 @@ def create_classification_form():
             "Echtzeit-Biometrie (öffentlich)",
             help="Echtzeit-Fernidentifizierung in öffentlich zugänglichen Räumen für Strafverfolgung"
         )
+
+    # NEU: Ausnahmen für Echtzeit-Biometrie
+    realtime_biometric_exception = None
+    if realtime_biometric:
+        st.markdown("##### Ausnahmen für Echtzeit-Biometrie (Art. 5(2))")
+        st.markdown("*Unter sehr engen Bedingungen kann Echtzeit-Biometrie für Strafverfolgung erlaubt sein (HIGH RISK statt verboten):*")
+        exception_options = ["Keine Ausnahme (verboten)"] + [
+            f"{v['name']}: {v['description']}" for v in REALTIME_BIOMETRIC_EXCEPTIONS.values()
+        ]
+        selected_exception = st.selectbox(
+            "Ausnahme auswählen",
+            exception_options,
+            help="Wählen Sie eine Ausnahme, falls zutreffend"
+        )
+        if selected_exception != "Keine Ausnahme (verboten)":
+            for key, val in REALTIME_BIOMETRIC_EXCEPTIONS.items():
+                if val['name'] in selected_exception:
+                    realtime_biometric_exception = key
+                    break
 
     st.divider()
 
@@ -388,6 +444,44 @@ def create_classification_form():
             help="Rechtmäßige Filterung biometrischer Datensätze"
         )
 
+    # NEU: Medientypen für Code of Practice Empfehlungen
+    synthetic_content_types = None
+    if generates_synthetic:
+        st.markdown("##### Welche Medientypen werden generiert?")
+        content_type_options = st.multiselect(
+            "Medientypen auswählen",
+            ["video", "image", "audio", "text"],
+            help="Wählen Sie alle Medientypen, die das System generiert (für spezifische Markierungsempfehlungen)"
+        )
+        if content_type_options:
+            synthetic_content_types = content_type_options
+
+    st.divider()
+
+    # NEU: GPAI (General Purpose AI) Abschnitt
+    st.subheader("6️⃣ General Purpose AI (GPAI) / Allzweck-KI")
+    st.markdown("""
+    <div class="info-box">
+    Ist Ihr KI-System ein Allzweck-KI-Modell (GPAI), das für eine Vielzahl von Aufgaben verwendet werden kann?
+    Beispiele: GPT-4, Claude, Gemini, Llama, Mistral
+    </div>
+    """, unsafe_allow_html=True)
+
+    col1, col2 = st.columns(2)
+
+    with col1:
+        is_gpai = st.checkbox(
+            "System ist ein GPAI-Modell",
+            help="Das System ist ein Allzweck-KI-Modell, das für viele verschiedene Aufgaben genutzt werden kann"
+        )
+
+    with col2:
+        gpai_systemic = st.checkbox(
+            "GPAI mit systemischem Risiko",
+            help="Das Modell hat hohe Auswirkungskapazitäten oder ist weit verbreitet (z.B. > 10^25 FLOPs für Training)",
+            disabled=not is_gpai
+        )
+
     st.divider()
 
     # Submit Button
@@ -414,10 +508,12 @@ def create_classification_form():
             exploits_vulnerable_groups=exploits_vulnerable,
             performs_social_scoring=social_scoring,
             predictive_policing_only_profiling=predictive_policing,
+            predictive_policing_with_objective_facts=predictive_policing_facts,
             scrapes_facial_recognition=facial_scraping,
             emotion_recognition_work_education=emotion_work_edu,
             biometric_categorization_sensitive=biometric_sensitive,
             realtime_biometric_public=realtime_biometric,
+            realtime_biometric_exception=realtime_biometric_exception,
             is_safety_component_annex_i=is_safety_component,
             is_product_annex_i=is_product,
             requires_third_party_assessment=requires_assessment,
@@ -433,7 +529,11 @@ def create_classification_form():
             generates_synthetic_content=generates_synthetic,
             generates_deepfakes=generates_deepfakes,
             emotion_recognition_medical_safety=emotion_medical,
-            biometric_categorization_lawful=biometric_lawful
+            biometric_categorization_lawful=biometric_lawful,
+            synthetic_content_types=synthetic_content_types,
+            is_gpai=is_gpai,
+            gpai_has_systemic_risk=gpai_systemic if is_gpai else False,
+            reference_date=date.today()
         )
 
         # Ergebnis speichern
@@ -484,13 +584,41 @@ def show_results():
         RiskLevel.MINIMAL: "✅"
     }
 
+    # GPAI-Indikator
+    gpai_text = ""
+    if result.is_gpai:
+        gpai_text = "<p><strong>GPAI-Modell:</strong> Ja"
+        if result.gpai_has_systemic_risk:
+            gpai_text += " (mit systemischem Risiko)"
+        gpai_text += "</p>"
+
     st.markdown(f"""
     <div class="{risk_class[result.risk_level]}">
         <h2>{risk_emoji[result.risk_level]} {result.risk_level.value}</h2>
         <p><strong>System:</strong> {system_name}</p>
         <p><strong>Anbieter:</strong> {provider}</p>
+        {gpai_text}
     </div>
     """, unsafe_allow_html=True)
+
+    # Warnungen anzeigen (falls vorhanden)
+    if result.warnings:
+        st.markdown("""
+        <div class="warning-box">
+        <h4>⚠️ Warnungen</h4>
+        </div>
+        """, unsafe_allow_html=True)
+        for warning in result.warnings:
+            st.warning(warning)
+
+    # Dokumentationspflicht bei Ausnahme
+    if result.exception_documentation_required:
+        st.markdown("""
+        <div class="warning-box">
+        <strong>📄 Dokumentationspflicht:</strong> Da Sie eine Ausnahme nach Artikel 6(3) geltend machen,
+        müssen Sie dies dokumentieren und auf Anfrage der zuständigen Behörde nachweisen können.
+        </div>
+        """, unsafe_allow_html=True)
 
     # Details in Expanders
     with st.expander("📋 Begründung der Einstufung", expanded=True):
@@ -504,6 +632,58 @@ def show_results():
     with st.expander("⚖️ Rechtliche Pflichten"):
         for obligation in result.obligations:
             st.markdown(f"- {obligation}")
+
+    # NEU: Transparenzpflichten (auch bei HIGH Risk)
+    if result.transparency_obligations:
+        with st.expander("🔍 Zusätzliche Transparenzpflichten (Art. 50)"):
+            st.markdown("*Diese Transparenzpflichten gelten zusätzlich zu den oben genannten Pflichten:*")
+            for obligation in result.transparency_obligations:
+                st.markdown(f"- {obligation}")
+
+    # NEU: GPAI-Pflichten
+    if result.is_gpai and result.gpai_obligations:
+        with st.expander("🤖 GPAI-spezifische Pflichten", expanded=True):
+            st.markdown(f"""
+            <div class="gpai-box">
+            <strong>Allzweck-KI-Modell (GPAI)</strong><br>
+            {'<em>Mit systemischem Risiko - zusätzliche Pflichten gelten!</em>' if result.gpai_has_systemic_risk else ''}
+            </div>
+            """, unsafe_allow_html=True)
+            for obligation in result.gpai_obligations:
+                st.markdown(f"- {obligation}")
+
+    # NEU: Universelle Pflichten
+    if result.universal_obligations:
+        with st.expander("🌍 Universelle Pflichten (gelten für alle KI-Systeme)"):
+            st.markdown("""
+            <div class="universal-box">
+            Diese Pflichten gelten unabhängig von der Risikoeinstufung:
+            </div>
+            """, unsafe_allow_html=True)
+            for obligation in result.universal_obligations:
+                st.markdown(f"- {obligation}")
+
+    # NEU: Anwendbare Fristen
+    if result.applicable_deadlines:
+        with st.expander("📅 Relevante Fristen"):
+            st.markdown("""
+            <div class="deadline-box">
+            <strong>Für Ihr System relevante Fristen des EU AI Act:</strong>
+            </div>
+            """, unsafe_allow_html=True)
+            deadline_names = {
+                "verbotene_praktiken": "Verbotene Praktiken (Art. 5)",
+                "ki_kompetenz": "KI-Kompetenz (Art. 4)",
+                "gpai": "GPAI-Modell-Pflichten",
+                "transparenzpflichten": "Transparenzpflichten (Art. 50)",
+                "hochrisiko_anhang_iii": "Hochrisiko-Systeme (Anhang III)",
+                "hochrisiko_anhang_i": "Hochrisiko-Produkte (Anhang I)"
+            }
+            today = date.today()
+            for key, deadline in result.applicable_deadlines.items():
+                name = deadline_names.get(key, key)
+                status = "✅ Bereits in Kraft" if today >= deadline else "⏳ Noch nicht in Kraft"
+                st.markdown(f"- **{name}**: {deadline.strftime('%d.%m.%Y')} - {status}")
 
     with st.expander("💡 Empfehlungen"):
         for rec in result.recommendations:

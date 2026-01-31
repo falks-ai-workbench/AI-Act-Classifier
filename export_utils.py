@@ -90,6 +90,14 @@ def generate_markdown_report(
     md.append(risk_explanations.get(result.risk_level, ""))
     md.append("")
 
+    # Warnungen (falls vorhanden)
+    if result.warnings:
+        md.append("## ⚠️ Warnungen")
+        md.append("")
+        for warning in result.warnings:
+            md.append(f"> **Warnung:** {warning}")
+        md.append("")
+
     # Begründungen
     md.append("## 3. Begründung der Einstufung")
     md.append("")
@@ -114,12 +122,71 @@ def generate_markdown_report(
         md.append(f"{i}. {obligation}")
     md.append("")
 
+    # Zusätzliche Transparenzpflichten
+    if result.transparency_obligations:
+        md.append("### Zusätzliche Transparenzpflichten (Art. 50)")
+        md.append("")
+        for obligation in result.transparency_obligations:
+            md.append(f"- {obligation}")
+        md.append("")
+
+    # GPAI-Pflichten
+    if result.is_gpai and result.gpai_obligations:
+        md.append("### GPAI-spezifische Pflichten")
+        md.append("")
+        if result.gpai_has_systemic_risk:
+            md.append("*Dieses System ist ein GPAI-Modell mit systemischem Risiko.*")
+        else:
+            md.append("*Dieses System ist ein GPAI-Modell.*")
+        md.append("")
+        for obligation in result.gpai_obligations:
+            md.append(f"- {obligation}")
+        md.append("")
+
+    # Universelle Pflichten
+    if result.universal_obligations:
+        md.append("### Universelle Pflichten (gelten für alle KI-Systeme)")
+        md.append("")
+        for obligation in result.universal_obligations:
+            md.append(f"- {obligation}")
+        md.append("")
+
+    # Dokumentationspflicht bei Ausnahme
+    if result.exception_documentation_required:
+        md.append("### ⚠️ Dokumentationspflicht")
+        md.append("")
+        md.append("> Da Sie eine Ausnahme nach Artikel 6(3) geltend machen, müssen Sie dies dokumentieren "
+                  "und auf Anfrage der zuständigen Behörde nachweisen können.")
+        md.append("")
+
     # Empfehlungen
     md.append("## 6. Empfehlungen")
     md.append("")
     for i, rec in enumerate(result.recommendations, 1):
         md.append(f"{i}. {rec}")
     md.append("")
+
+    # Relevante Fristen
+    if result.applicable_deadlines:
+        md.append("## 7. Für Ihr System relevante Fristen")
+        md.append("")
+        md.append("| Frist | Datum | Status |")
+        md.append("|-------|-------|--------|")
+        from datetime import date
+        today = date.today()
+        deadline_names = {
+            "verbotene_praktiken": "Verbotene Praktiken (Art. 5)",
+            "ki_kompetenz": "KI-Kompetenz (Art. 4)",
+            "gpai": "GPAI-Modell-Pflichten",
+            "transparenzpflichten": "Transparenzpflichten (Art. 50)",
+            "hochrisiko_anhang_iii": "Hochrisiko-Systeme (Anhang III)",
+            "hochrisiko_anhang_i": "Hochrisiko-Produkte (Anhang I)"
+        }
+        for key, deadline in result.applicable_deadlines.items():
+            name = deadline_names.get(key, key)
+            status = "✅ In Kraft" if today >= deadline else "⏳ Noch nicht in Kraft"
+            md.append(f"| {name} | {deadline.strftime('%d.%m.%Y')} | {status} |")
+        md.append("")
 
     # Zusätzliche Informationen
     if additional_info:
@@ -372,12 +439,21 @@ def create_classification_summary(result: ClassificationResult, system_name: str
     """
     Erstellt eine Zusammenfassung der Klassifizierung für Export.
     """
-    return {
+    summary = {
         "Systemname": system_name,
         "Risikostufe": result.risk_level.value,
         "Begründungen": "; ".join(result.reasons),
         "Pflichten": "; ".join(result.obligations),
         "Empfehlungen": "; ".join(result.recommendations),
         "Anwendbare_Artikel": "; ".join(result.applicable_articles),
-        "Klassifizierungsdatum": result.timestamp.strftime('%d.%m.%Y %H:%M:%S')
+        "Klassifizierungsdatum": result.timestamp.strftime('%d.%m.%Y %H:%M:%S'),
+        # Neue Felder
+        "GPAI": "Ja" if result.is_gpai else "Nein",
+        "GPAI_Systemisches_Risiko": "Ja" if result.gpai_has_systemic_risk else "Nein",
+        "GPAI_Pflichten": "; ".join(result.gpai_obligations) if result.gpai_obligations else "",
+        "Transparenzpflichten": "; ".join(result.transparency_obligations) if result.transparency_obligations else "",
+        "Universelle_Pflichten": "; ".join(result.universal_obligations) if result.universal_obligations else "",
+        "Dokumentationspflicht_Ausnahme": "Ja" if result.exception_documentation_required else "Nein",
+        "Warnungen": "; ".join(result.warnings) if result.warnings else ""
     }
+    return summary
