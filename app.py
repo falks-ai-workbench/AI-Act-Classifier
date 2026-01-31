@@ -308,20 +308,20 @@ def create_classification_form():
 
     with col1:
         is_safety_component = st.checkbox(
-            "Sicherheitskomponente eines regulierten Produkts",
-            help="Das KI-System ist eine Sicherheitskomponente eines Produkts nach Anhang I"
+            "KI steuert sicherheitskritische Funktion eines Produkts",
+            help="z.B. Bremsassistent, Medizingeräte-Steuerung, KI in Aufzügen oder Maschinen"
         )
 
     with col2:
         is_product = st.checkbox(
-            "Das KI-System IST selbst das regulierte Produkt",
-            help="Das KI-System ist selbst ein Produkt nach Anhang I"
+            "Das KI-System wird als eigenständiges Produkt verkauft",
+            help="z.B. KI-Diagnosegerät, autonomer Roboter, KI-Medizinprodukt"
         )
 
     with col3:
         requires_assessment = st.checkbox(
-            "Erfordert Drittanbieter-Konformitätsbewertung",
-            help="Das Produkt erfordert eine Konformitätsbewertung durch Dritte"
+            "Eine externe Prüfstelle (z.B. TÜV) muss das Produkt zertifizieren",
+            help="Nicht nur Selbsterklärung des Herstellers, sondern unabhängige Sicherheitsprüfung erforderlich"
         )
 
     if is_safety_component or is_product:
