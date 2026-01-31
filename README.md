@@ -4,18 +4,28 @@ Ein interaktives Python-Tool zur automatischen Einstufung von KI-Systemen nach d
 
 ## Features
 
-- **Automatische Risikoklassifizierung** nach EU AI Act
+### Kernfunktionen
+- **Automatische Risikoklassifizierung** nach EU AI Act (4 Risikostufen)
 - **Interaktives Web-Frontend** mit Streamlit
 - **Umfassende Dokumentation** als Markdown-Export
 - **Excel/CSV-Export** für Compliance-Dokumentation
 - **Technische Dokumentationsvorlage** nach Anhang IV (für Hochrisiko-Systeme)
 - **Mehrere Klassifizierungen** in einer Session
 
+### Erweiterte Features
+- **GPAI-Klassifizierung** (General Purpose AI) mit Unterscheidung: Nutzer vs. Anbieter vs. Finetuning
+- **Edge Cases & Ausnahmen**: Echtzeit-Biometrie-Ausnahmen, Predictive Policing mit objektiven Fakten
+- **Konfliktprüfung**: Warnung bei widersprüchlichen Eingaben
+- **Fristbasierte Logik**: Anzeige relevanter Fristen und deren Status
+- **Kumulative Transparenzpflichten**: Auch HIGH Risk Systeme erhalten Transparenzpflichten
+- **Code of Practice Empfehlungen**: Spezifische Markierungsmethoden pro Medientyp
+- **Universelle Pflichten**: KI-Kompetenz und DSGVO-Hinweise für alle Systeme
+
 ## Installation
 
 ```bash
 # Repository klonen oder Dateien herunterladen
-cd AI-Act-Logger
+cd AI-Act-Classifier
 
 # Virtuelle Umgebung erstellen (empfohlen)
 python -m venv venv
@@ -40,18 +50,25 @@ Die Anwendung öffnet sich automatisch im Browser unter `http://localhost:8501`.
 
 1. Geben Sie die Grundinformationen Ihres KI-Systems ein
 2. Beantworten Sie die Fragen zu verbotenen Praktiken (Artikel 5)
-3. Prüfen Sie, ob Ihr System unter Hochrisiko-Kategorien fällt
-4. Geben Sie an, ob Transparenzpflichten gelten
-5. Klicken Sie auf "KI-System klassifizieren"
+3. Prüfen Sie Hochrisiko Pathway A (Regulierte Produkte nach Anhang I)
+4. Prüfen Sie Hochrisiko Pathway B (Anwendungsbereiche nach Anhang III)
+5. Geben Sie an, ob Transparenzpflichten gelten
+6. Wählen Sie Ihre GPAI-Rolle (Nutzer, Finetuner oder Entwickler)
+7. Klicken Sie auf "KI-System klassifizieren"
 
 ### 2. Ergebnis & Export
 
 Nach der Klassifizierung erhalten Sie:
 - Die Risikostufe Ihres KI-Systems
+- Warnungen bei Konflikten oder Ausnahmen
 - Begründung der Einstufung
 - Anwendbare Artikel des EU AI Act
 - Rechtliche Pflichten
-- Empfehlungen
+- Zusätzliche Transparenzpflichten (falls zutreffend)
+- GPAI-spezifische Pflichten (falls zutreffend)
+- Universelle Pflichten (KI-Kompetenz, DSGVO)
+- Relevante Fristen mit Status
+- Empfehlungen inkl. Code of Practice Markierungsmethoden
 
 Export-Optionen:
 - **Markdown-Bericht**: Vollständiger Bericht zur Dokumentation
@@ -81,12 +98,14 @@ Für Hochrisiko-Systeme können Sie eine Vorlage für die technische Dokumentati
 ## Projektstruktur
 
 ```
-AI-Act-Logger/
+AI-Act-Classifier/
 ├── app.py                 # Streamlit Frontend (Hauptanwendung)
-├── classifier_logic.py    # Klassifizierungslogik
+├── classifier_logic.py    # Klassifizierungslogik & Konstanten
 ├── export_utils.py        # Export-Funktionen (MD, CSV, Excel)
+├── AI-ACT-RULES.md        # Dokumentation der EU AI Act Regeln
 ├── requirements.txt       # Python-Abhängigkeiten
-└── README.md             # Diese Datei
+├── CLAUDE.md              # Entwickler-Dokumentation
+└── README.md              # Diese Datei
 ```
 
 ## Haftungsausschluss
